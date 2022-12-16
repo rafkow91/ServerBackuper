@@ -1,0 +1,16 @@
+// change name to 'config.json'
+
+[
+  {
+    "host": "your_1st_server_host",
+    "port": 22,
+    "username": "user1",
+    "password": "password1"
+  },
+  {
+    "host": "your_2nd_server_host",
+    "port": 22,
+    "username": "user2",
+    "password": "password2"
+  }
+]

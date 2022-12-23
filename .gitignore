@@ -131,4 +131,5 @@ dmypy.json
 
 # My other files
 notes/
-config.json
+config.yml
+config.yaml

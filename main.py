@@ -15,6 +15,6 @@ if __name__ == '__main__':
                     print(f'connect OK (IP: {server["host"]})')
                     ssh.zipping_files()
                     ssh.get_files()
-                    
+
             except NoValidConnectionsError as e:
                 print(str(e)[13:])

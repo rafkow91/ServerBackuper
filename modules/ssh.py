@@ -1,6 +1,8 @@
 ''' Remote client works on SSH'''
 import os
+import pathlib
 import sys
+import datetime
 
 from getpass import getpass
 from paramiko import SSHClient, AutoAddPolicy, AuthenticationException
@@ -34,19 +36,29 @@ class SSHContextManager:
     :type known_hosts_path: str
     '''
 
-    def __init__(self, host: str, username: str, ssh_key_path: str = None,
-                 password: str = None, port: int = 22, known_hosts_path: str = None) -> None:
+    def __init__(self, connection_config: dict = None) -> None:
         self.client = SSHClient()
-        self.host = host
-        self.known_hosts_path = known_hosts_path
-        self.password = password
-        self.port = port
-        self.ssh_key_path = ssh_key_path
-        self.username = username
+        if connection_config:
+            self.dir_to_zip = pathlib.Path(connection_config.get('dir_to_zip', ''))
+            self.host = connection_config.get('host', None)
+            self.known_hosts_path = connection_config.get('known_hosts_path', None)
+            self.password = connection_config.get('password', None)
+            self.port = connection_config.get('port', None)
+            self.server_name = connection_config.get('server_name', None)
+            self.ssh_key_path = connection_config.get('ssh_key_path', None)
+            self.system = connection_config.get('system', None).lower()
+            self.username = connection_config.get('username', None)
 
-        if self.known_hosts_path is None:
-            actual_os = sys.platform
-            self.known_hosts_path = DEFAULT_KNOWS_HOST_PATHS.get(actual_os)
+            if self.known_hosts_path is None:
+                actual_os = sys.platform
+                self.known_hosts_path = DEFAULT_KNOWS_HOST_PATHS.get(actual_os)
+
+        # TODO: maybe I have to extract to other function
+        self.destination_path = (
+            self.dir_to_zip.parent if self.system == 'linux' else pathlib.Path(
+                "\\".join(str(self.dir_to_zip).split("\\")[:-1]))
+        ).joinpath(
+            f'{self.server_name if self.server_name else self.host}_{datetime.datetime.now().strftime("%Y-%m-%d")}.zip')
 
     def __enter__(self):
         self.client.load_host_keys(self.known_hosts_path)
@@ -71,11 +83,26 @@ class SSHContextManager:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.client.close()
 
-    def get_files(self, files_paths: list[str]):
+    def get_files(self, files_paths: list[str] = None):
         '''
         Getting files from the server.
         '''
+        if files_paths is None:
+            files_paths = [self.destination_path]
+
         scp = SCPClient(self.client.get_transport())
         for file_path in files_paths:
             scp.get(file_path)
         scp.close()
+
+    def zipping_files(self):
+        if self.system == 'windows':
+            print('Zipping in Windows')
+            command = f'Compress-Archive -Path {self.dir_to_zip} -DestinationPath {self.destination_path}'
+        elif self.system == 'linux':
+            print('Zipping in Linux')
+            command = f'zip -r {self.destination_path} {self.dir_to_zip}'
+
+        stdin, stdout, stderr = self.client.exec_command(command)
+        if stderr:
+            print(stderr.read().decode('utf8'))

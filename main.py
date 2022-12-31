@@ -1,5 +1,4 @@
 """ Server Backuper -> make backups using ssh connection    """
-from json import load
 import yaml
 
 from paramiko.ssh_exception import NoValidConnectionsError
@@ -12,9 +11,10 @@ if __name__ == '__main__':
 
         for server in servers:
             try:
-                with SSHContextManager(username=server['username'], host=server['host'], ssh_key_path=server.get('ssh_key', None), password=server.get('password', None)) as ssh:
+                with SSHContextManager(connection_config=server) as ssh:
                     print(f'connect OK (IP: {server["host"]})')
-
-                    ssh.get_files(['D:\\test.txt'])
+                    ssh.zipping_files()
+                    ssh.get_files()
+                    
             except NoValidConnectionsError as e:
                 print(str(e)[13:])

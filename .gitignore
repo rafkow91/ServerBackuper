@@ -131,9 +131,11 @@ dmypy.json
 
 # My other files
 notes/
-config.yml
-config.yaml
+*.yml
+*.yaml
 *.zip
+notes.*
 
-# VSCode config
+# VSCode/PyCharm config
 .vscode/
+.idea/

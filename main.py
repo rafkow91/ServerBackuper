@@ -1,5 +1,6 @@
 """ Server Backuper -> make backups using ssh connection    """
 import yaml
+from ftplib import FTP
 
 from paramiko.ssh_exception import NoValidConnectionsError
 

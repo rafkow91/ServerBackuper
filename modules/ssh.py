@@ -35,25 +35,25 @@ class SSHContextManager:
     the default path for the current OS
     :type known_hosts_path: str
     '''
+    # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, connection_config: dict = None) -> None:
+    def __init__(self, connection_config: dict) -> None:
         self.client = SSHClient()
-        if connection_config:
-            self.dir_to_zip = pathlib.Path(connection_config.get('dir_to_zip', ''))
-            self.host = connection_config.get('host', None)
-            self.known_hosts_path = connection_config.get('known_hosts_path', None)
-            self.password = connection_config.get('password', None)
-            self.port = connection_config.get('port', None)
-            self.server_name = connection_config.get('server_name', None)
-            self.ssh_key_path = connection_config.get('ssh_key_path', None)
-            self.system = connection_config.get('system', None).lower()
-            self.username = connection_config.get('username', None)
 
-            if self.known_hosts_path is None:
-                actual_os = sys.platform
-                self.known_hosts_path = DEFAULT_KNOWS_HOST_PATHS.get(actual_os)
+        self.dir_to_zip = pathlib.Path(connection_config.get('dir_to_zip', ''))
+        self.host = connection_config.get('host', None)
+        self.known_hosts_path = connection_config.get('known_hosts_path', None)
+        self.password = connection_config.get('password', None)
+        self.port = connection_config.get('port', None)
+        self.server_name = connection_config.get('server_name', None)
+        self.ssh_key_path = connection_config.get('ssh_key_path', None)
+        self.system = connection_config.get('system', None).lower()
+        self.username = connection_config.get('username', None)
 
-        # TODO: maybe I have to extract to other function
+        if self.known_hosts_path is None:
+            actual_os = sys.platform
+            self.known_hosts_path = DEFAULT_KNOWS_HOST_PATHS.get(actual_os)
+
         self.destination_path = (
             self.dir_to_zip.parent if self.system == 'linux' else pathlib.Path(
                 "\\".join(str(self.dir_to_zip).split("\\")[:-1]))
@@ -96,6 +96,9 @@ class SSHContextManager:
         scp.close()
 
     def zipping_files(self):
+        '''
+        Zipping files on the remote server.
+        '''
         if self.system == 'windows':
             print('Zipping in Windows')
             command = f'Compress-Archive -Path {self.dir_to_zip} -DestinationPath {self.destination_path}'
@@ -103,6 +106,6 @@ class SSHContextManager:
             print('Zipping in Linux')
             command = f'zip -r {self.destination_path} {self.dir_to_zip}'
 
-        stdin, stdout, stderr = self.client.exec_command(command)
+        _, _, stderr = self.client.exec_command(command)
         if stderr:
             print(stderr.read().decode('utf8'))

@@ -7,7 +7,7 @@ class FTPUploader:
         with open(config_path, mode='r', encoding='utf8') as config_file:
             self.config = safe_load(config_file)
 
-    def upload_files(self, files_to_upload: list = None):
+    def upload_files(self, files_to_upload: list[str] = None):
         if files_to_upload is None:
             return False
         with FTP(self.config['ftp_host'],

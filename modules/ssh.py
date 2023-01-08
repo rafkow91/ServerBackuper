@@ -54,11 +54,12 @@ class SSHContextManager:
             actual_os = sys.platform
             self.known_hosts_path = DEFAULT_KNOWS_HOST_PATHS.get(actual_os)
 
+        self.filename = f'{self.server_name if self.server_name else self.host}_{datetime.datetime.now().strftime("%Y-%m-%d")}.zip'
+
         self.destination_path = (
             self.dir_to_zip.parent if self.system == 'linux' else pathlib.Path(
                 "\\".join(str(self.dir_to_zip).split("\\")[:-1]))
-        ).joinpath(
-            f'{self.server_name if self.server_name else self.host}_{datetime.datetime.now().strftime("%Y-%m-%d")}.zip')
+        ).joinpath(self.filename)
 
     def __enter__(self):
         self.client.load_host_keys(self.known_hosts_path)
@@ -100,11 +101,18 @@ class SSHContextManager:
         Zipping files on the remote server.
         '''
         if self.system == 'windows':
-            print('Zipping in Windows')
             command = f'Compress-Archive -Path {self.dir_to_zip} -DestinationPath {self.destination_path}'
         elif self.system == 'linux':
-            print('Zipping in Linux')
             command = f'zip -r {self.destination_path} {self.dir_to_zip}'
+
+        _, _, stderr = self.client.exec_command(command)
+        if stderr:
+            print(stderr.read().decode('utf8'))
+
+    def delete_files(self, files_paths: list[str] = None):
+        if files_paths is None:
+            files_paths = [self.destination_path]
+            command = f'rm {self.destination_path}'
 
         _, _, stderr = self.client.exec_command(command)
         if stderr:

@@ -135,6 +135,7 @@ notes/
 *.yaml
 *.zip
 notes.*
+telwin.*
 
 # VSCode/PyCharm config
 .vscode/

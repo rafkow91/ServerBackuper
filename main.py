@@ -1,6 +1,6 @@
 """ Server Backuper -> make backups using ssh connection    """
-import yaml
 import pathlib
+import yaml
 
 from paramiko.ssh_exception import NoValidConnectionsError
 
@@ -8,7 +8,7 @@ from modules.ssh import SSHContextManager
 from modules.ftp import FTPUploader
 
 if __name__ == '__main__':
-    with open('config.yml', mode='r') as file:
+    with open('config.yml', mode='r', encoding='utf8') as file:
         servers = yaml.safe_load_all(file)
 
         for server in servers:
@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
                     ftp = FTPUploader()
                     ftp.upload_files([ssh.filename])
-                    
+
                     file = pathlib.Path(ssh.filename)
                     file.unlink()
 

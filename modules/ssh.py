@@ -1,4 +1,4 @@
-''' Remote client works on SSH'''
+""" Remote client works on SSH """
 import os
 import pathlib
 import sys
@@ -18,7 +18,7 @@ DEFAULT_KNOWS_HOST_PATHS = {
 
 
 class SSHContextManager:
-    '''
+    """
     > This function is used to get files from a remote server
 
     :param host: The hostname or IP address of the server
@@ -34,8 +34,10 @@ class SSHContextManager:
     :param known_hosts_path: The path to the known_hosts file. If not provided, it will be set to
     the default path for the current OS
     :type known_hosts_path: str
-    '''
+    """
+
     # pylint: disable=too-many-instance-attributes
+    # pylint: disable=line-too-long
 
     def __init__(self, connection_config: dict) -> None:
         self.client = SSHClient()
@@ -85,9 +87,9 @@ class SSHContextManager:
         self.client.close()
 
     def get_files(self, files_paths: list[str] = None):
-        '''
+        """
         Getting files from the server.
-        '''
+        """
         if files_paths is None:
             files_paths = [self.destination_path]
 
@@ -97,23 +99,47 @@ class SSHContextManager:
         scp.close()
 
     def zipping_files(self):
-        '''
+        """
         Zipping files on the remote server.
-        '''
+        """
         if self.system == 'windows':
             command = f'Compress-Archive -Path {self.dir_to_zip} -DestinationPath {self.destination_path}'
         elif self.system == 'linux':
             command = f'zip -r {self.destination_path} {self.dir_to_zip}'
 
-        _, _, stderr = self.client.exec_command(command)
+        _, stdout, stderr = self.client.exec_command(command)
         if stderr:
-            print(stderr.read().decode('utf8'))
+            return stderr.read().decode('utf8')
+        if stdout:
+            return stdout.read().decode('utf8')
 
     def delete_files(self, files_paths: list[str] = None):
+        """
+        It deletes the file from the remote server
+
+        :param files_paths: list[str] = None
+        :type files_paths: list[str]
+        """
         if files_paths is None:
             files_paths = [self.destination_path]
             command = f'rm {self.destination_path}'
 
-        _, _, stderr = self.client.exec_command(command)
+        _, stdout, stderr = self.client.exec_command(command)
         if stderr:
-            print(stderr.read().decode('utf8'))
+            return stderr.read().decode('utf8')
+        if stdout:
+            return stdout.read().decode('utf8')
+
+    def command(self, command: str) -> None:
+        """
+        It executes a command on the remote server and returns the error message if there is one
+
+        :param command: The command to run on the remote server
+        :type command: str
+        :return: None | Error string.
+        """
+        _, stdout, stderr = self.client.exec_command(command)
+        if stderr:
+            return stderr.read().decode('utf8')
+        if stdout:
+            return stdout.read().decode('utf8')

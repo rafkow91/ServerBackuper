@@ -112,6 +112,7 @@ class SSHContextManager:
             return stderr.read().decode('utf8')
         if stdout:
             return stdout.read().decode('utf8')
+        return None
 
     def delete_files(self, files_paths: list[str] = None):
         """
@@ -129,6 +130,7 @@ class SSHContextManager:
             return stderr.read().decode('utf8')
         if stdout:
             return stdout.read().decode('utf8')
+        return None
 
     def command(self, command: str) -> None:
         """
@@ -143,3 +145,4 @@ class SSHContextManager:
             return stderr.read().decode('utf8')
         if stdout:
             return stdout.read().decode('utf8')
+        return None

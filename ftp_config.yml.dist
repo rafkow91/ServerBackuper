@@ -1,0 +1,4 @@
+ftp_host: host
+ftp_user: user
+ftp_password: password
+ftp_upload_dir: upload/dir

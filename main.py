@@ -1,20 +1,29 @@
 """ Server Backuper -> make backups using ssh connection    """
 import pathlib
 import yaml
+import logging
 
 from paramiko.ssh_exception import NoValidConnectionsError
 
 from modules.ssh import SSHContextManager
 from modules.ftp import FTPUploader
 
-if __name__ == '__main__':
+
+def main():
+    logging.basicConfig(
+        filename='server_backuper.log',
+        encoding='utf-8',
+        level=logging.INFO,
+        format='%(asctime)s %(levelname)s:"%(message)s"',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
     with open('config.yml', mode='r', encoding='utf8') as file:
         servers = yaml.safe_load_all(file)
 
         for server in servers:
             try:
                 with SSHContextManager(connection_config=server) as ssh:
-                    print(f'connect OK (IP: {server["host"]})')
                     ssh.zipping_files()
                     ssh.get_files()
                     ssh.delete_files()
@@ -24,7 +33,8 @@ if __name__ == '__main__':
 
                     file = pathlib.Path(ssh.filename)
                     file.unlink()
-
             except NoValidConnectionsError as e:
-                print(str(e)[13:])
-            
+                logging.error(str(e)[13:])
+
+if __name__ == '__main__':
+    main()

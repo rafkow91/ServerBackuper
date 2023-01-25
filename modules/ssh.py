@@ -3,9 +3,11 @@ import os
 import pathlib
 import sys
 import datetime
+import logging
 
 from getpass import getpass
 from paramiko import SSHClient, AutoAddPolicy, AuthenticationException
+
 from scp import SCPClient
 
 USER = os.environ.get('USERNAME')
@@ -64,12 +66,13 @@ class SSHContextManager:
         ).joinpath(self.filename)
 
     def __enter__(self):
+        logging.info(f'Connect to: {self.server_name if self.server_name else self.host}')
         self.client.load_host_keys(self.known_hosts_path)
         self.client.set_missing_host_key_policy(AutoAddPolicy())
         self.client.load_system_host_keys()
 
         try:
-            if self.ssh_key_path is not None:
+            if self.ssh_key_path:
                 self.client.connect(self.host, username=self.username,
                                     key_filename=self.ssh_key_path, allow_agent=False)
             else:
@@ -77,10 +80,11 @@ class SSHContextManager:
                                     password=self.password, allow_agent=False)
 
         except AuthenticationException:
-            print('Authentication with ssh key failed!')
+            logging.error('Authentication with ssh key/password from config file failed!')
             password = getpass(f'Input password for user "{self.username}": ')
             self.client.connect(self.host, username=self.username, password=password)
-
+        except TimeoutError:
+            logging.error('Connection timed out')
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
